@@ -1,0 +1,455 @@
+{
+  "name": "Ai Content Creator",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "zakeen",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -368,
+        -16
+      ],
+      "id": "2783a4ca-358c-4e36-95da-a7ab9949e586",
+      "name": "Webhook",
+      "webhookId": "82a69182-14f5-4a31-9189-16dba49c6512"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fcff3cb6-d569-47ae-a3a7-d2f3e88d611b",
+              "name": "Topic",
+              "value": "={{ $json.body.topic }}",
+              "type": "string"
+            },
+            {
+              "id": "f0bcda51-0cfc-425c-b7b6-220b0ebfdbeb",
+              "name": "ContentType",
+              "value": "={{ $json.body.contentType }}",
+              "type": "string"
+            },
+            {
+              "id": "2e7a3ee4-f8a5-4c83-a4a0-678722d58c29",
+              "name": "Tone",
+              "value": "={{ $json.body.tone }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -160,
+        -16
+      ],
+      "id": "31c96306-7a8d-49c4-8c88-60e76cf17789",
+      "name": "Clean Data"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Topic: {{ $json.Topic }}\nContent type: {{ $json.ContentType }}\nTone: {{ $json.Tone }}\n\nGenerate the content brief now.",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a content strategy expert. When given a topic, content type, and tone, you must return ONLY a valid JSON object — no explanation, no markdown, no extra text. Do not wrap the response in code blocks or backticks.\n\nThe JSON must have exactly these 6 keys:\n\n{\n  \"audience\": \"Who the content targets, their age range, pain points, and what they are searching for\",\n  \"keywords\": [\"primary keyword\", \"secondary keyword\", \"long-tail keyword\", \"related keyword\", \"LSI keyword\"],\n  \"angle\": \"The unique hook or perspective that makes this content stand out from competitors\",\n  \"tone\": \"Writing style — person (first/second/third), formality level, reading grade, and voice description\",\n  \"outline\": [\n    { \"heading\": \"H1 — main title of the article\", \"description\": \"What this opening section establishes\" },\n    { \"heading\": \"H2 — first subheading\", \"description\": \"What this section covers in 1 sentence\" },\n    { \"heading\": \"H2 — second subheading\", \"description\": \"What this section covers in 1 sentence\" },\n    { \"heading\": \"H2 — third subheading\", \"description\": \"What this section covers in 1 sentence\" },\n    { \"heading\": \"H2 — fourth subheading\", \"description\": \"What this section covers in 1 sentence\" },\n    { \"heading\": \"H2 — conclusion subheading\", \"description\": \"Summary and what the reader should do next\" }\n  ],\n  \"cta\": \"One specific, actionable call-to-action sentence that matches the content goal\"\n}\n\nRules:\n- Return only the raw JSON object. Nothing before it, nothing after it.\n- Do not add any explanation, commentary, or markdown formatting.\n- Do not use code fences or backticks around the JSON.\n- All 6 keys must always be present.\n- The outline array must always have exactly 6 items.\n- Make all values specific to the topic — never use placeholder text like \"keyword1\" or \"H2 subheading\"."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        48,
+        -16
+      ],
+      "id": "224849e8-adad-499f-bafc-96b6cca42b53",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        784,
+        -16
+      ],
+      "id": "2cb20a6e-e5f2-48a0-b180-3a2f636417e8",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hvaLVwz9fEWxD30U1k8GohpuuyQ2VBtziDGpuHlIg9A",
+          "mode": "list",
+          "cachedResultName": "Brief Studio AI",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hvaLVwz9fEWxD30U1k8GohpuuyQ2VBtziDGpuHlIg9A/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hvaLVwz9fEWxD30U1k8GohpuuyQ2VBtziDGpuHlIg9A/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -96,
+        352
+      ],
+      "id": "4dbec9a9-5d2c-4d7a-bcd6-49c3f4911b13",
+      "name": "Read History",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "1W6Y43sCUlVTY5UW",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Ensure we handle incoming data from the Google Sheets node safely\nconst rows = $input.all();\n\n// Wrap the array inside a single history object for Brief Studio\nreturn [\n  {\n    json: {\n      history: rows.map(item => {\n        return {\n          // Replace 'Topic' with your exact Google Sheets column header\n          topic: item.json.Topic || \"Untitled Generation\", \n          \n          // Replace 'GeneratedContent' with your exact column header\n          content: item.json.GeneratedContent || \"\",       \n          \n          // Replace 'Date' with your exact column header or leave fallback\n          date: item.json.Date || new Date().toISOString()\n        };\n      })\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        352
+      ],
+      "id": "ae46a82f-c142-4911-a6f7-bd6a68fd9dac",
+      "name": "Fetch History"
+    },
+    {
+      "parameters": {
+        "path": "history",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -320,
+        352
+      ],
+      "id": "0cf9177a-2734-4dfe-84c2-f921ffdae10c",
+      "name": "Get history",
+      "webhookId": "0ea07331-9045-42ea-9e1a-687c60b77775"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        304,
+        352
+      ],
+      "id": "1955a1ce-e663-456b-b364-f6d8d655d184",
+      "name": "Show history website"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        48,
+        176
+      ],
+      "id": "37bebe36-7190-4739-bed1-9b08157d4f94",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "7N5AwkR55lOaMRt4",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1hvaLVwz9fEWxD30U1k8GohpuuyQ2VBtziDGpuHlIg9A",
+          "mode": "list",
+          "cachedResultName": "Brief Studio AI",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hvaLVwz9fEWxD30U1k8GohpuuyQ2VBtziDGpuHlIg9A/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hvaLVwz9fEWxD30U1k8GohpuuyQ2VBtziDGpuHlIg9A/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "CTA": "={{ $json.cta }}",
+            "Keywords": "={{ $json.keywords }}",
+            "Angle": "={{ $json.angle }}",
+            "Topic": "={{ $('Clean Data').item.json.Topic }}",
+            "Content Type": "={{ $('Clean Data').item.json.ContentType }}",
+            "Tone": "={{ $json.tone }}",
+            "Outline": "={{ $json.outline }}",
+            "Audience": "={{ $json.audience }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Topic",
+              "displayName": "Topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Content Type",
+              "displayName": "Content Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tone",
+              "displayName": "Tone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Outline",
+              "displayName": "Outline",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Audience",
+              "displayName": "Audience",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "TImestamp",
+              "displayName": "TImestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Keywords",
+              "displayName": "Keywords",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Angle",
+              "displayName": "Angle",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CTA",
+              "displayName": "CTA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        576,
+        -16
+      ],
+      "id": "cce1b743-8fff-472f-bc02-300753722251",
+      "name": "Sava data",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "1W6Y43sCUlVTY5UW",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.text;\nconst cleaned = raw.replace(/```json|```/g, '').trim();\nconst parsed = JSON.parse(cleaned);\nreturn [{ json: parsed }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        -16
+      ],
+      "id": "49c6aed8-fa52-48b8-b023-b635ed3d4440",
+      "name": "Correct Json ready for DB"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Clean Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Data": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Correct Json ready for DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read History": {
+      "main": [
+        [
+          {
+            "node": "Fetch History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch History": {
+      "main": [
+        [
+          {
+            "node": "Show history website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get history": {
+      "main": [
+        [
+          {
+            "node": "Read History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sava data": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Correct Json ready for DB": {
+      "main": [
+        [
+          {
+            "node": "Sava data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "9139151b-6981-4978-b401-8195c1b27418",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a4e473cf0ff8dc98c6c5d795e3118d617fd7474c0f568d47424bcaf6ed8cc6b6"
+  },
+  "id": "BIxmd4UqlbqHeo4z",
+  "tags": []
+}
